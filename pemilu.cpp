@@ -374,14 +374,18 @@ void inputSuara(Node** pemilih, Node** calon, Queue &daf_pem, Stack &golput){
         // Menampilkan daftar calon terpilih
         cetakCalon(*calon);
 
-        do{
+        while(true){
             cout << endl << endl; 
             cout << "PILIH NOMOR CALON : "; 
             cin >> no_calon;
             cout << endl; 
             cout << "Yakin dengan pilihan anda? (Y/T) : ";
             cin >> pilih; 
-        } while(pilih != 'y' || pilih != 'Y');
+            
+            if(pilih != 'y' || pilih != 'Y'){
+                break;
+            }
+        }
 
         // Apabila pemilih memutuskan golput
         if(pilih == -1){
@@ -408,6 +412,45 @@ void inputSuara(Node** pemilih, Node** calon, Queue &daf_pem, Stack &golput){
         cout << endl << endl; 
         cout << "MAAF ANDA TIDAK DAPAT MEMILIH" << endl;
     }
+}
+
+int hitungSuara(Node* head_ref){
+	Node* temp = head_ref; 
+	int number = 0;
+
+	while(temp->next->status != "Calon"){
+		temp = temp->next; 
+		number++;
+	}
+	return number; 
+}
+
+void hasilPem(Queue suara, Stack putih, Node* calon){
+    Node* temp = calon;
+    Node* ptr[100];
+    int jumlah = 0;
+    int hasil = 0;
+    
+    do{
+		if(temp->status == "Calon"){
+			ptr[jumlah] = temp;
+			jumlah++;
+		}
+		temp = temp->next; 
+	}while(temp != NULL);
+
+	for(int i = 0; i < jumlah; i++){
+		hasil = hitungSuara(ptr[i]);
+		cout << "+----------------------------+" << endl; 
+        cout << "|" << " # NOMOR " << i + 1 << endl;
+        cout << "|" << endl; 
+        cout << "| " << calon->nama << endl;
+        cout << "| " << hasil << " SUARA" << endl;  
+        cout << "+----------------------------+" << endl << endl;
+	}
+
+    cout << "TOTAL PEMILIH  : " << suara.hitung() << endl;
+    cout << "JUMLAH GOLPUT  : " << putih.count() << endl << endl;
 }
 
 
@@ -539,7 +582,12 @@ int main(){
             break;
             
             case 4:
-
+                system("CLS");
+                cout << "+-----------------------------------------+" << endl; 
+                cout << "|          HASIL PEMILIHAN SUARA          |" << endl; 
+                cout << "+-----------------------------------------+" << endl << endl;
+                hasilPem(suara, golput, calon);
+                system("PAUSE");
             break;
             
             case 5:
