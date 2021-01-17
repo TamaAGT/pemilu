@@ -75,27 +75,22 @@ public:
     }
     
     int hitung(){
-        return (belakang - depan + 1);
-    }
-
-    bool cari(int indeks){
-        for(unsigned int i = 0; i < sizeof(arr); i++){
-            if(arr[i] == indeks);
-            return true;
+        if(kosong()){
+            return 0;
         }
-        return false; 
+        return (belakang - depan + 1);
     }
 };
 
 class Stack{
 private:
     int top;
-    int arr[5];
+    int arr[500];
 
 public:
     Stack(){
         top = -1;
-        for(int i = 0; i < 5; i++){
+        for(int i = 0; i < 500; i++){
             arr[i] = 0;
         }
     }
@@ -106,7 +101,7 @@ public:
             return false; 
     }
     bool isFull(){
-        if(top == 4)
+        if(top == 500)
             return true; 
         else 
             return false; 
@@ -235,6 +230,16 @@ bool konfirmasi(Node* node, int id, bool &option){
     return option; 
 }
 
+//Cek apakah indeks sudah ada pada daftar orang yg memilih
+bool cari(int indeks, Queue daf_pem){
+        for(int i = 0; i < daf_pem.hitung(); i++){
+            if(indeks == daf_pem.dequeue()){
+              return true;
+            }
+        }
+        return false; 
+    }
+
 void updateIndeks(Node* head_ref, int &indeks){
     // cek apakah nilai indeks sudah mulai digunakan
     if(head_ref == NULL){
@@ -248,7 +253,7 @@ void updateIndeks(Node* head_ref, int &indeks){
     while(head_ref->indeks != indeks);
 }
 
-void daftarAnggota(Node* node){
+void daftarAnggota(Node* node, string jenis){
     cout << "+---------+-----------------------------+---------------------------------------+---------------------+"<< endl;
     cout << "|" << setw(5) << "ID" << setw(5) << "|" << setw(15) << "NAMA" << setw(15) << "|" 
     << setw(20) << "ALAMAT" << setw(20) << "|" << setw(13) << "NO. KTP" << setw(9) << "|" << endl;
@@ -261,8 +266,10 @@ void daftarAnggota(Node* node){
     }
 
     while(node != NULL){
-        cout << "|" << setw(5) << node->indeks << setw(5) << "|" << setw(29) <<  node->nama << "|" << setw(39) << node->alamat<< "|" << setw(21) << node->no_ktp << "|" << endl;
-        cout << "+---------+-----------------------------+---------------------------------------+---------------------+" << endl;
+        if(node->status == jenis){
+            cout << "|" << setw(5) << node->indeks << setw(5) << "|" << setw(29) <<  node->nama << "|" << setw(39) << node->alamat<< "|" << setw(21) << node->no_ktp << "|" << endl;
+            cout << "+---------+-----------------------------+---------------------------------------+---------------------+" << endl;
+        }
         node = node->next; 
     }
 }
@@ -336,7 +343,9 @@ bool validasi(Node* temp, Queue daf_pem, int tarIdk, string tarNama, string tarN
     // Cek apakah orang sudah pernah memilih
     if(daf_pem.kosong() == false){
         // Apabila indeks pemilih sudah ada di queue maka gagal
-        if(daf_pem.cari(tarIdk)){
+        if(cari(tarIdk, daf_pem) == true){
+            cout << endl;
+            cout << "ANDA SUDAH PERNAH MEMILIH" << endl << endl;
             return false;
         }
     }
@@ -350,7 +359,7 @@ bool validasi(Node* temp, Queue daf_pem, int tarIdk, string tarNama, string tarN
     return false; 
 }
 
-void inputSuara(Node** pemilih, Node** calon, Queue &daf_pem, Stack &golput){
+void inputSuara(Node** pemilih, Node** calon, Queue &daf_pem, Stack &putih){
     Node* temp = *calon; 
     string nama, no_ktp;
     int indeks, no_calon;
@@ -367,10 +376,10 @@ void inputSuara(Node** pemilih, Node** calon, Queue &daf_pem, Stack &golput){
 
     // Cek apakah peserta boleh memilih 
     if(validasi(*pemilih, daf_pem, indeks, nama, no_ktp)){
+        cout << endl;
         cout << "!!! ANDA TERDAFTAR DAN SELAMAT MEMILIH !!!" << endl << endl; 
         system("PAUSE");
-        cout << endl; 
-
+        cout << endl;
         // Menampilkan daftar calon terpilih
         cetakCalon(*calon);
 
@@ -381,56 +390,63 @@ void inputSuara(Node** pemilih, Node** calon, Queue &daf_pem, Stack &golput){
             cout << endl; 
             cout << "Yakin dengan pilihan anda? (Y/T) : ";
             cin >> pilih; 
-            
+
             if(pilih != 'y' || pilih != 'Y'){
                 break;
             }
         }
 
-        // Apabila pemilih memutuskan golput
-        if(pilih == -1){
-            golput.push(indeks);
-        }
-       
-        // Masukkan indeks pemilih ke daftar orang sudah memilih
+         // Masukkan indeks pemilih ke daftar orang sudah memilih
         daf_pem.enqueue(indeks);
 
-        // Tambahkan node pemilih ke belakang node calon
-        while(temp->next != NULL){
-            if(temp->status == "Calon"){
-                nomor++;
-                if( nomor == no_calon ){
-                    sisipBelakang(&temp, indeks, nama, "-", "-", "Pemilh" );
-				return; 
-			}
-            }
-            temp = temp->next; 
+        // Apabila pemilih memutuskan golput
+        if(no_calon == -1){
+            putih.push(indeks);
         }
-
-
+        else {
+            // Tambahkan node pemilih ke belakang node calon
+            while(temp != NULL){
+                if(temp->status == "Calon"){
+                    nomor++;
+                    if( nomor == no_calon ){
+                        sisipBelakang(&temp, indeks, nama, "-", "-", "Pemilh" );
+                    return; 
+                }
+                }
+                temp = temp->next; 
+            }
+        }
     } else {
         cout << endl << endl; 
         cout << "MAAF ANDA TIDAK DAPAT MEMILIH" << endl;
     }
 }
 
-int hitungSuara(Node* head_ref){
-	Node* temp = head_ref; 
+int hitungSuara(Node* temp){
 	int number = 0;
 
-	while(temp->next->status != "Calon"){
-		temp = temp->next; 
-		number++;
+    temp = temp->next;
+    // Menelusuri node selama node selanjutnya bukan Calon
+	while(temp != NULL){
+        if(temp->status == "Calon"){
+            break;
+        }
+        if(temp->status == "Pemilih"){
+            number++;
+        }
+        number++;
+        temp = temp->next; 
 	}
-	return number; 
+    return number;   
 }
 
-void hasilPem(Queue suara, Stack putih, Node* calon){
+void hasilPem(Queue suara, Node* calon, Stack golput){
     Node* temp = calon;
     Node* ptr[100];
     int jumlah = 0;
     int hasil = 0;
-    
+
+    // Mengambil data calon dari node kemudian simpan pada array
     do{
 		if(temp->status == "Calon"){
 			ptr[jumlah] = temp;
@@ -439,18 +455,18 @@ void hasilPem(Queue suara, Stack putih, Node* calon){
 		temp = temp->next; 
 	}while(temp != NULL);
 
+    // Outputkan perolehan suara berdasarkan array yang sudah terimpan
 	for(int i = 0; i < jumlah; i++){
 		hasil = hitungSuara(ptr[i]);
 		cout << "+----------------------------+" << endl; 
         cout << "|" << " # NOMOR " << i + 1 << endl;
         cout << "|" << endl; 
-        cout << "| " << calon->nama << endl;
+        cout << "| " << ptr[i]->nama << endl;
         cout << "| " << hasil << " SUARA" << endl;  
         cout << "+----------------------------+" << endl << endl;
 	}
-
     cout << "TOTAL PEMILIH  : " << suara.hitung() << endl;
-    cout << "JUMLAH GOLPUT  : " << putih.count() << endl << endl;
+    cout << "JUMLAH GOLPUT  : " << golput.count() << endl << endl;
 }
 
 
@@ -472,7 +488,7 @@ int main(){
         cout << "[1] Daftar Pemilih" << endl; 
         cout << "[2] Daftar Calon Terpilih" << endl; 
         cout << "[3] Input Suara" << endl; 
-        cout << "[4] Hasil Pemilihan" << endl; 
+        cout << "[4] Hasil Pemilihan" << endl;
         cout << "[5] Keluar" << endl << endl;
         cout << "Pilih : ";
         cin >> pilihan;
@@ -497,7 +513,7 @@ int main(){
                             cout << setw(70) << "+---------------------------------------+" << endl; 
                             cout << setw(70) << "|          LIST DAFTAR PEMILIH          |" << endl; 
                             cout << setw(70) << "+---------------------------------------+" << endl << endl << endl; 
-                            daftarAnggota(pemilih);
+                            daftarAnggota(pemilih, "Pemilih");
                             cout << endl << endl; 
                             system("PAUSE");
                         break;
@@ -544,7 +560,7 @@ int main(){
                             cout << setw(70) << "+------------------------------------+" << endl; 
                             cout << setw(70) << "|          LIST DAFTAR CALON         |" << endl; 
                             cout << setw(70) << "+------------------------------------+" << endl << endl << endl; 
-                            daftarAnggota(calon);
+                            daftarAnggota(calon, "Calon");
                             cout << endl << endl; 
                             system("PAUSE");
                         break;
@@ -586,12 +602,17 @@ int main(){
                 cout << "+-----------------------------------------+" << endl; 
                 cout << "|          HASIL PEMILIHAN SUARA          |" << endl; 
                 cout << "+-----------------------------------------+" << endl << endl;
-                hasilPem(suara, golput, calon);
+                hasilPem(suara, calon, golput);
                 system("PAUSE");
             break;
             
             case 5:
-
+            system("CLS");
+            cout << "+----------------------------------+" << endl; 
+            cout << "|          KELUAR PROGRAM          |" << endl; 
+            cout << "+----------------------------------+" << endl << endl;
+            system("PAUSE");
+            exit(1);
             break;
 
             default:
