@@ -1,6 +1,7 @@
 #include <iostream>
 #include <iomanip>
 #include <string.h>
+#include <fstream>
 using namespace std;
 
 //Variabel Global indeks anggota &  calon
@@ -142,6 +143,15 @@ public:
 
 };
 
+// Struct untuk menyimpan data buffer file
+struct Anggota{
+    int id;
+    string nama;
+    string alamat;
+    string no_ktp;
+    string status; 
+};
+
 // Linked list 
 class Node {
 public:
@@ -240,17 +250,102 @@ bool cari(int indeks, Queue daf_pem){
         return false; 
     }
 
+void simpanFileIdk(int indeks, string fileName){
+    //Mendeklarasikan file
+    ofstream file; 
+
+    //Membuka file untuk menyimpan data stack golput
+    file.open(fileName.c_str());
+
+    file << indeks << endl; 
+
+    //Menutup file
+    file.close();
+}
+
+void bacaQueue(Queue &suara){
+    ifstream file;
+    //Membuka file
+    file.open("suara.txt");
+
+    if(file.is_open()){
+        int line;
+        //Looping sampai ke data terakhir file
+        while(!file.eof()){
+            // meyimpan setiap data pada buffer
+            file >> line;
+
+            if(!file){
+                break;
+            }
+            // Masukkan data pada queue
+            suara.enqueue(line);
+        }
+    }
+}
+
+void bacaStack(Stack &golput){
+    ifstream stack;
+    //Membuka file
+    stack.open("golput.txt");
+
+    if(stack.is_open()){
+        int line; 
+
+        while(!stack.eof()){
+            // Menyimpan setiap line pada file pada buffer 
+            stack >> line; 
+
+            if(!stack){
+                break;
+            }
+            // Menginputkan nilai pada Stack golput
+            golput.push(line);
+        }
+        //Menutup file jika sudah selesai
+        stack.close();
+    }
+}
+
+void bacaList(Node** node, Anggota &data, string fileName){
+    ifstream outFile;
+
+    outFile.open(fileName.c_str());
+
+    if(outFile.is_open()){
+        while(!outFile.eof()){
+            //Masukkan data file pada buffer yang ada 
+            outFile >> data.id;
+            
+            outFile.get();
+
+            getline(outFile, data.nama);
+            getline(outFile, data.alamat);
+            getline(outFile, data.no_ktp);
+            getline(outFile, data.status);
+
+            if(!outFile){
+                break;
+            }
+            data.id -= 1;
+            //Sisip data node dari var buffer
+            sisipBelakang(node, data.id, data.nama, data.alamat, data.no_ktp, data.status);
+        }
+    }
+}
+
 void updateIndeks(Node* head_ref, int &indeks){
     // cek apakah nilai indeks sudah mulai digunakan
     if(head_ref == NULL){
         return;
     }
     //mencari nilai indeks terkahir dari node
-    do{
-        indeks++;
+    while(head_ref != NULL){
         head_ref = head_ref->next; 
     }
-    while(head_ref->indeks != indeks);
+
+    indeks = head_ref->indeks;
+    indeks++;
 }
 
 void daftarAnggota(Node* node, string jenis){
@@ -398,10 +493,14 @@ void inputSuara(Node** pemilih, Node** calon, Queue &daf_pem, Stack &putih){
 
          // Masukkan indeks pemilih ke daftar orang sudah memilih
         daf_pem.enqueue(indeks);
+        // Menyimpan daftar orang yang sudah memilih
+        simpanFileIdk(indeks, "suara.txt");
 
-        // Apabila pemilih memutuskan golput
+        // Apabila pemilih memutuskan golput masukkan ke stack golput
         if(no_calon == -1){
             putih.push(indeks);
+            // Menyimpan data golput ke dalam file
+            simpanFileIdk(indeks, "golput.txt");
         }
         else {
             // Tambahkan node pemilih ke belakang node calon
@@ -469,6 +568,16 @@ void hasilPem(Queue suara, Node* calon, Stack golput){
     cout << "JUMLAH GOLPUT  : " << golput.count() << endl << endl;
 }
 
+void print(Node* n){
+    while(n != NULL){
+        cout << n->indeks << endl;
+        cout << n->nama << endl;
+        cout << n->alamat << endl; 
+        cout << n->no_ktp << endl;
+        cout << n->status << endl;
+        n = n->next; 
+    }
+}
 
 int main(){
     int pilihan;
@@ -476,10 +585,19 @@ int main(){
     Node* pemilih = NULL; // Inisiasi linked list untuk pemilih
     Node* calon = NULL; // Inisiasi linked list untuk calon terpilih
     Queue suara; //Inisiasi queue untuk menyimpan data idk_pemilih
-    Stack golput; 
+    Stack golput;
+    Anggota buffer;
 
-    sisipBelakang(&pemilih, idk_anggota, "harya", "panjang", "13", "Pemilih");
-    sisipBelakang(&calon, idk_calon, "Suhartanto", "panjangjiwo", "2424", "Calon");
+    //Membaca indeks orang yang sudah pernah memilih
+    bacaQueue(suara);
+    // Membaca dari database file daftar orang golput sebelumnya
+    bacaStack(golput);
+
+    // Membaca data anggota pemilih dari file
+    bacaList(&pemilih, buffer, "pemilih.txt");
+    // Membaca data anggota calon dari file
+    bacaList(&calon, buffer, "calon.txt");
+    
     do{
         system("cls");
         cout << "+-----------------------------------------+" << endl; 
